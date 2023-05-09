@@ -36,23 +36,12 @@ const converterLinhasEmPaleta = (linhas: string[]): Result<InserirPaletaDto[], E
         return success({ rgb: [r, g, b], nome })
       })
 
-  if (dadosPaleta.findIndex(result.isFailure) !== -1) {
-    const erros = dadosPaleta
-      .map(result.toFailureOrNull)
-      .filter((resultado): resultado is [number, string] => resultado !== null)
-    return failure({ kind: 'formato_de_paleta_invalido', linhas: erros })
-  }
-
-  return success(
-    dadosPaleta
-      .map(result.toSuccessOrNull)
-      .filter((resultado): resultado is InserirPaletaDto => resultado !== null)
-  )
+  return result.elevate((linhas) => ({ kind: 'formato_de_paleta_invalido', linhas }), dadosPaleta)
 }
 
 const converterRgbEmCores = (dadosPaleta: InserirPaletaDto[]): Result<CorPaleta[], ErroInsercaoPaleta> => {
   const cores =
-    dadosPaleta.map((dadosCor, indice) => {
+    dadosPaleta.map((dadosCor, indice): Result<CorPaleta, [number, string]> => {
       const [rString, gString, bString] = dadosCor.rgb
 
       const r = Number(rString)
@@ -71,18 +60,7 @@ const converterRgbEmCores = (dadosPaleta: InserirPaletaDto[]): Result<CorPaleta[
       return success({ nome: dadosCor.nome, cor })
     })
 
-  if (cores.findIndex(result.isFailure) !== -1) {
-    const erros = cores
-      .map(result.toFailureOrNull)
-      .filter((resultado): resultado is [number, string] => resultado !== null)
-    return failure({ kind: 'valor_de_cor_invalido', linhas: erros })
-  }
-
-  return success(
-    cores
-      .map(result.toSuccessOrNull)
-      .filter((resultado): resultado is CorPaleta => resultado !== null)
-  )
+  return result.elevate((linhas) => ({ kind: 'valor_de_cor_invalido', linhas }), cores)
 }
 
 const criarPaleta = (nome: string, cores: CorPaleta[]): Paleta => ({

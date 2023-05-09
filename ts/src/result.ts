@@ -79,6 +79,24 @@ const teeError = <TSuccess, TFailure>(
   }
 }
 
+const elevate = <TSuccess, TFailure, TError>(errorConstructor: (param: TFailure[]) => TError, array: Result<TSuccess, TFailure>[]): Result<TSuccess[], TError> => {
+  if (array.findIndex(result => result.kind === 'failure') !== -1) {
+    return failure(
+      errorConstructor(
+        array
+          .map(toFailureOrNull)
+          .filter((result): result is TFailure => result !== null)
+      )
+    )
+  } else {
+    return success(
+      array
+        .map(toSuccessOrNull)
+        .filter((result): result is TSuccess => result != null)
+    )
+  }
+}
+
 export const result = {
   isSuccess,
   isFailure,
@@ -88,4 +106,5 @@ export const result = {
   map,
   tee,
   teeError,
+  elevate,
 }

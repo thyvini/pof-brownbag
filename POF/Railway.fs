@@ -20,3 +20,14 @@ module Result =
         | _ -> value
 
     let toOptionError = toOptionError
+
+    let elevate (errorConstructor: 'TFailure array -> 'TError) (resultArray: Result<'TSuccess, 'TFailure> array) =
+        if Array.exists Result.isError resultArray then
+            resultArray
+            |> Array.filter Result.isError
+            |> Array.choose toOptionError
+            |> (errorConstructor >> Error)
+        else
+            resultArray
+            |> Array.choose Result.toOption
+            |> Ok

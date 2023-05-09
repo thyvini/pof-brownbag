@@ -23,67 +23,45 @@ let converterLinhaEmPaleta linhas =
         |> Array.map String.trimWhiteSpaces
         |> Array.filter String.isNotNullOrWhiteSpace
 
-    let dadosPaletas =
-        linhas
-        |> Array.map dividirLinha
-        |> Array.mapi (fun (index: int) (linha: string array) ->
-            match linha with
-            | [| r; g; b; nome |] -> Ok { RGB = r, g, b; Nome = nome }
-            | _ -> Error(index, linha |> String.concat " "))
+    linhas
+    |> Array.map dividirLinha
+    |> Array.mapi (fun (index: int) (linha: string array) ->
+        match linha with
+        | [| r; g; b; nome |] -> Ok { RGB = r, g, b; Nome = nome }
+        | _ -> Error(index, linha |> String.concat " "))
 
-    if Array.exists Result.isError dadosPaletas then
-        dadosPaletas
-        |> Array.filter Result.isError
-        |> Array.choose Result.toOptionError
-        |> (FormatoDePaletaInvalido >> Error)
-
-    else
-        dadosPaletas |> Array.choose Result.toOption |> Ok
+    |> Result.elevate FormatoDePaletaInvalido
 
 let validarRGB dadosPaletas =
-    let validacoes =
-        dadosPaletas
-        |> Array.mapi (fun (index: int) (dadosPaleta: InserirPaletaDto) ->
-            let r, g, b = dadosPaleta.RGB
+    dadosPaletas
+    |> Array.mapi (fun (index: int) (dadosPaleta: InserirPaletaDto) ->
+        let r, g, b = dadosPaleta.RGB
 
-            match [| r; g; b |] with
-            | x when Array.exists (String.canBeConvertedToInt32 >> not) x -> Error(index, $"{r}, {g}, {b}")
-            | _ -> Ok())
+        match [| r; g; b |] with
+        | x when Array.exists (String.canBeConvertedToInt32 >> not) x -> Error(index, $"{r}, {g}, {b}")
+        | _ -> Ok dadosPaleta)
 
-    if Array.exists Result.isError validacoes then
-        validacoes
-        |> Array.filter Result.isError
-        |> Array.choose Result.toOptionError
-        |> (FormatoDePaletaInvalido >> Error)
-    else
-        Ok dadosPaletas
+    |> Result.elevate FormatoDePaletaInvalido
 
 let converterRGBEmCores dadosPaletas =
-    let cores =
-        dadosPaletas
-        |> Array.mapi (fun (index: int) (dadosPaleta: InserirPaletaDto) ->
-            let rString, gString, bString = dadosPaleta.RGB
+    dadosPaletas
+    |> Array.mapi (fun (index: int) (dadosPaleta: InserirPaletaDto) ->
+        let rString, gString, bString = dadosPaleta.RGB
 
-            let r = Int32.Parse(rString)
-            let g = Int32.Parse(gString)
-            let b = Int32.Parse(bString)
+        let r = Int32.Parse(rString)
+        let g = Int32.Parse(gString)
+        let b = Int32.Parse(bString)
 
-            let valorDeCorInvalido cor = cor > 255 || cor < 0
+        let valorDeCorInvalido cor = cor > 255 || cor < 0
 
-            match [| r; g; b |] with
-            | x when Array.exists valorDeCorInvalido x -> Error(index, $"{r}, {g}, {b}")
-            | _ ->
-                Ok
-                    { Nome = dadosPaleta.Nome
-                      Cor = Color.FromArgb(r, g, b) })
+        match [| r; g; b |] with
+        | x when Array.exists valorDeCorInvalido x -> Error(index, $"{r}, {g}, {b}")
+        | _ ->
+            Ok
+                { Nome = dadosPaleta.Nome
+                  Cor = Color.FromArgb(r, g, b) })
 
-    if Array.exists Result.isError cores then
-        cores
-        |> Array.filter Result.isError
-        |> Array.choose Result.toOptionError
-        |> (ValorDeCorInvalido >> Error)
-    else
-        cores |> Array.choose Result.toOption |> Ok
+    |> Result.elevate ValorDeCorInvalido
 
 let criarPaleta nomeDaPaleta cores = { Nome = nomeDaPaleta; Cores = cores }
 
