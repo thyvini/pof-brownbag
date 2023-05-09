@@ -14,85 +14,75 @@ export type Failure<U> = {
   failure: U
 }
 
-export const success = <TSuccess, TFailure>(value: TSuccess): Result<TSuccess, TFailure> => ({ kind: 'success', success: value })
-export const failure = <TSuccess, TFailure>(value: TFailure): Result<TSuccess, TFailure> => ({ kind: 'failure', failure: value })
+export const success = <TSuccess>(value: TSuccess): Success<TSuccess> =>
+  ({ kind: 'success', success: value })
 
-const isSuccess = <TSuccess, TFailure>(result: Result<TSuccess, TFailure>) =>
+export const failure = <TFailure>(value: TFailure): Failure<TFailure> =>
+  ({ kind: 'failure', failure: value })
+
+const isSuccess = <TSuccess, TFailure>(result: Result<TSuccess, TFailure>): result is Success<TSuccess> =>
   result.kind === 'success'
 
-const isFailure = <TSuccess, TFailure>(result: Result<TSuccess, TFailure>) =>
+const isFailure = <TSuccess, TFailure>(result: Result<TSuccess, TFailure>): result is Failure<TFailure> =>
   result.kind === 'failure'
-
-const toSuccessOrNull = <TSuccess, TFailure>(result: Result<TSuccess, TFailure>) =>
-  result.kind === 'success' ? result.success : null
-
-const toFailureOrNull = <TSuccess, TFailure>(result: Result<TSuccess, TFailure>) =>
-  result.kind === 'failure' ? result.failure : null
 
 const bind = <TParam, TSuccess, TFailure>(
   fn: (param: TParam) => Result<TSuccess, TFailure>,
   anterior: Result<TParam, TFailure>
-): Result<TSuccess, TFailure> => {
-  switch (anterior.kind) {
-    case 'success':
-      return fn(anterior.success)
-    case 'failure':
-      return anterior
-  }
-}
+): Result<TSuccess, TFailure> =>
+  isSuccess(anterior)
+    ? fn(anterior.success)
+    : anterior
 
 const map = <TParam, TSuccess, TFailure>(
   fn: (param: TParam) => TSuccess,
   anterior: Result<TParam, TFailure>
-) => {
-  switch (anterior.kind) {
-    case 'success':
-      return success<TSuccess, TFailure>(fn(anterior.success))
-    case 'failure':
-      return anterior
-  }
-}
+): Result<TSuccess, TFailure> =>
+  isSuccess(anterior)
+    ? success(fn(anterior.success))
+    : anterior
 
 const tee = <TParam, TFailure>(
   fn: (param: TParam) => void,
   anterior: Result<TParam, TFailure>
-) => {
-  switch (anterior.kind) {
-    case 'success':
-      fn(anterior.success)
-      return success<TParam, TFailure>(anterior.success)
-    case 'failure':
-      return anterior
+): Result<TParam, TFailure> => {
+  if (isSuccess(anterior)) {
+    fn(anterior.success)
+    return success(anterior.success)
+  } else {
+    return anterior
   }
 }
 
-const teeError = <TSuccess, TFailure>(
-  fn: (param: TFailure) => void,
-  anterior: Result<TSuccess, TFailure>
-) => {
-  switch (anterior.kind) {
-    case 'failure':
-      fn(anterior.failure)
-      return failure<TSuccess, TFailure>(anterior.failure)
-    case 'success':
-      return anterior
+const teeError = <TSuccess, TParam>(
+  fn: (param: TParam) => void,
+  anterior: Result<TSuccess, TParam>
+): Result<TSuccess, TParam> => {
+  if (isFailure(anterior)) {
+    fn(anterior.failure)
+    return failure(anterior.failure)
+  } else {
+    return anterior
   }
 }
 
-const elevate = <TSuccess, TFailure, TError>(errorConstructor: (param: TFailure[]) => TError, array: Result<TSuccess, TFailure>[]): Result<TSuccess[], TError> => {
-  if (array.findIndex(result => result.kind === 'failure') !== -1) {
+const elevate = <TSuccess, TFailure, TError>(
+  errorConstructor: (param: TFailure[]) => TError,
+  array: Result<TSuccess, TFailure>[]
+): Result<TSuccess[], TError> => {
+  if (array.findIndex(isFailure) !== -1) {
     return failure(
       errorConstructor(
         array
-          .map(toFailureOrNull)
-          .filter((result): result is TFailure => result !== null)
+          .filter(isFailure)
+          .map(result => result.failure)
       )
     )
   } else {
     return success(
       array
-        .map(toSuccessOrNull)
-        .filter((result): result is TSuccess => result != null)
+        .filter(isSuccess)
+        .map(result => result.success)
     )
   }
 }
@@ -100,8 +90,6 @@ const elevate = <TSuccess, TFailure, TError>(errorConstructor: (param: TFailure[
 export const result = {
   isSuccess,
   isFailure,
-  toSuccessOrNull,
-  toFailureOrNull,
   bind,
   map,
   tee,

@@ -18,7 +18,7 @@ const lerArquivoDePaleta = (nomeDoArquivo: string): Result<string, ErroInsercaoP
   }
 }
 
-const separarArquivoEmLinhas = (arquivo: string): string[] =>
+const separarArquivoEmLinhas = (arquivo: string) =>
   arquivo.split('\n')
 
 const converterLinhasEmPaleta = (linhas: string[]): Result<InserirPaletaDto[], ErroInsercaoPaleta> => {
