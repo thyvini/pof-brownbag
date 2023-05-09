@@ -1,23 +1,20 @@
-import { success, failure, Result, makeRail } from "./railway"
+import criarRepositorio from './repositorio'
+import { inserirPaleta } from "./inserirPaleta"
+import { criarDb, executarMigrations } from "./dbConfig"
 
-const validaPodeIrNoRestaurante = (nome: string): Result<number, Error> => {
-  return nome === 'João'
-    ? failure(new Error('João tá de castigo'))
-    : success(7)
+const executar = async (args: string[]) => {
+  const db = criarDb()
+
+  await executarMigrations(db)
+
+  if (args.length === 3 && args[0] === 'inserir') {
+    const repositorio = criarRepositorio(db)
+    inserirPaleta(repositorio, args[1], args[2])
+  } else {
+    console.log('Operação Inválida: use "inserir <nome-da-paleta> <nome-do-arquivo>" ou "ler"')
+  }
 }
 
-const validaNumeroDaSorte = (numero: number): Result<string, Error> => {
-  return numero === 7
-    ? success('João')
-    : failure(new Error('Numero zikado'))
-}
+const [_, __, ...args] = process.argv
 
-const peteRepete = (str: string) => str.repeat(3)
-
-const imprime = (str: string) => console.log(str, 'marche-melou')
-
-makeRail(validaPodeIrNoRestaurante)
-  .then(validaNumeroDaSorte)
-  .map(peteRepete)
-  .mapTee(imprime)
-  .run('Juca')
+executar(args)

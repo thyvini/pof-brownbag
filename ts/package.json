@@ -11,7 +11,12 @@
   "author": "Thyago Cunha",
   "license": "ISC",
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.4",
     "@types/node": "^18.16.1",
     "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "better-sqlite3": "^8.3.0",
+    "kysely": "^0.24.2"
   }
 }

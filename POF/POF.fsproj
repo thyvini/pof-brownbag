@@ -3,8 +3,29 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
+  <PropertyGroup>
+    <ContentSQLiteInteropFiles>true</ContentSQLiteInteropFiles>
+    <CopySQLiteInteropFiles>true</CopySQLiteInteropFiles>
+  </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Migrations/202305031322_AdicionarPaleta.fs" />
+    <Compile Include="String.fs" />
     <Compile Include="Railway.fs" />
+    <Compile Include="Paleta.fs" />
+    <Compile Include="Erros.fs" />
+    <Compile Include="DTOs.fs" />
+    <Compile Include="DbConfig.fs" />
+    <Compile Include="Data.fs" />
+    <Compile Include="Repositorio.fs" />
+    <Compile Include="InserirPaleta.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Dapper.FSharp" Version="4.5.0" />
+    <PackageReference Include="FluentMigrator" Version="3.3.2" />
+    <PackageReference Include="FluentMigrator.Runner" Version="3.3.2" />
+    <PackageReference Include="FluentMigrator.Runner.SQLite" Version="3.3.2" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.117" />
   </ItemGroup>
 </Project>

@@ -1,22 +1,20 @@
-﻿open Railway
+﻿open System
+open DbConfig
+open InserirPaleta
+open Repositorio
+open System.Data.SQLite
 
-let validaPodeIrNoRestaurante nome =
-  match nome with
-  | "João" -> Error "João tá de castigo"
-  | x -> Ok 7
+let args = Environment.GetCommandLineArgs()
 
-let validaNumeroDaSorte numero =
-  if numero = 7 then Ok "João"
-  else Error "Número zikado"
+let executar args = 
+    efetuarMigrations()
 
-let repete str = str |> String.replicate 3
+    use conexaoDb = new SQLiteConnection("Data Source=paleta.db")
+    let repositorio = criarRepositorio conexaoDb
 
-let imprime = printfn "%s"
+    match args with
+    | [| _; "inserir"; nomeDaPaleta; nomeDoArquivo |] ->
+        InserirPaleta.executar repositorio nomeDaPaleta nomeDoArquivo
+    | _ -> invalidArg "operacao" "Operação Inválida: use 'inserir <nome-da-paleta> <nome-do-arquivo>' ou 'ler'"
 
-let pipeline =
-  validaPodeIrNoRestaurante
-  >> Result.bind validaNumeroDaSorte
-  >> Result.map repete
-  >> Result.tee imprime
-
-pipeline "Juca" |> printfn "%A"
+executar args
