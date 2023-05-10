@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { Failure, Result, Success, failure, result, success } from './result'
-import { makeRail } from './railway'
+import { makeAsyncRail, makeRail } from './railway'
 import { ErroInsercaoPaleta, mensagemErroInsercaoPaleta } from './erros'
 import { InserirPaletaDto } from './dtos'
 import { CorPaleta, Paleta } from './paleta'
@@ -68,8 +68,8 @@ const criarPaleta = (nome: string, cores: CorPaleta[]): Paleta => ({
   cores
 })
 
-const salvarPaletaNoBancoDeDados = (repositorio: Repositorio, paleta: Paleta): void => {
-  repositorio.inserirPaleta(paleta)
+const salvarPaletaNoBancoDeDados = async (repositorio: Repositorio, paleta: Paleta) => {
+  await repositorio.inserirPaleta(paleta)
     .catch((e: Error) => {
       throw new Error(e.message)
     })
@@ -89,8 +89,8 @@ const gravarErro = (erro: ErroInsercaoPaleta) => {
   console.error(erro)
 }
 
-export const inserirPaleta = (repositorio: Repositorio, nomeDaPaleta: string, nomeDoArquivo: string) => {
-  makeRail(lerArquivoDePaleta)
+export const inserirPaleta = async (repositorio: Repositorio, nomeDaPaleta: string, nomeDoArquivo: string) => {
+  await makeAsyncRail(lerArquivoDePaleta)
     .map(separarArquivoEmLinhas)
     .then(converterLinhasEmPaleta)
     .then(converterRgbEmCores)

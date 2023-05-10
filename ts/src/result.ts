@@ -33,6 +33,14 @@ const bind = <TParam, TSuccess, TFailure>(
   isSuccess(anterior)
     ? fn(anterior.success)
     : anterior
+  
+const bindAsync = async <TParam, TSuccess, TFailure>(
+  fn: (param: TParam) => Promise<Result<TSuccess, TFailure>>,
+  anterior: Result<TParam, TFailure>
+): Promise<Result<TSuccess, TFailure>> =>
+  isSuccess(anterior)
+    ? await fn(anterior.success)
+    : anterior
 
 const map = <TParam, TSuccess, TFailure>(
   fn: (param: TParam) => TSuccess,
@@ -40,6 +48,14 @@ const map = <TParam, TSuccess, TFailure>(
 ): Result<TSuccess, TFailure> =>
   isSuccess(anterior)
     ? success(fn(anterior.success))
+    : anterior
+
+const mapAsync = async <TParam, TSuccess, TFailure>(
+  fn: (param: TParam) => Promise<TSuccess>,
+  anterior: Result<TParam, TFailure>
+): Promise<Result<TSuccess, TFailure>> =>
+  isSuccess(anterior)
+    ? success(await fn(anterior.success))
     : anterior
 
 const tee = <TParam, TFailure>(
@@ -54,10 +70,34 @@ const tee = <TParam, TFailure>(
   }
 }
 
+const teeAsync = async <TParam, TFailure>(
+  fn: (param: TParam) => Promise<void>,
+  anterior: Result<TParam, TFailure>
+): Promise<Result<TParam, TFailure>> => {
+  if (isSuccess(anterior)) {
+    await fn(anterior.success)
+    return success(anterior.success)
+  } else {
+    return anterior
+  }
+}
+
 const teeError = <TSuccess, TParam>(
   fn: (param: TParam) => void,
   anterior: Result<TSuccess, TParam>
 ): Result<TSuccess, TParam> => {
+  if (isFailure(anterior)) {
+    fn(anterior.failure)
+    return failure(anterior.failure)
+  } else {
+    return anterior
+  }
+}
+
+const teeErrorAsync = async <TSuccess, TParam>(
+  fn: (param: TParam) => Promise<void>,
+  anterior: Result<TSuccess, TParam>
+): Promise<Result<TSuccess, TParam>> => {
   if (isFailure(anterior)) {
     fn(anterior.failure)
     return failure(anterior.failure)
@@ -91,8 +131,12 @@ export const result = {
   isSuccess,
   isFailure,
   bind,
+  bindAsync,
   map,
+  mapAsync,
   tee,
+  teeAsync,
   teeError,
+  teeErrorAsync,
   elevate,
 }

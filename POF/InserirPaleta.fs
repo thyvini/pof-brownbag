@@ -83,5 +83,5 @@ module InserirPaleta =
         >> Result.bind converterRGBEmCores
         >> Result.map (criarPaleta nomePaleta)
         >> Result.tee (salvarPaletaNoBancoDeDados repositorio >> Async.RunSynchronously)
-        >> Result.teeError (registrarErro)
+        >> Result.teeError registrarErro
         >> finalizar
